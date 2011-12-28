@@ -5,3 +5,8 @@ ABOUT
 
 HOW TO USE
 	Please check the examples included for information on how to use PowerProcess
+
+IMPORTANT NOTE
+	PowerProcess is very similar to PowerSpawn, however, more features are available in 
+	PowerProcess and it is not backwards compatible.  Changes to convert code to PowerProcess
+	are minimal and should be easy enough for you if you have experience with PowerSpawn
