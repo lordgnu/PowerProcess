@@ -1,0 +1,7 @@
+ABOUT
+	PowerProcess is a PCNTL and POSIX wrapper for *nix systems running PHP
+	
+	It is for managing and running forked process for parrallel computing with PHP
+
+HOW TO USE
+	Please check the examples included for information on how to use PowerProcess
