@@ -209,6 +209,9 @@ class PowerProcess {
 		unset($this->callbacks);
 		unset($this->myThreads);
 		
+		// Handle any remaining signals
+		pcntl_signal_dispatch();
+		
 		$this->RemoveLogger();
 	}
 	
@@ -320,7 +323,7 @@ class PowerProcess {
 		// Register with PCNTL
 		if (is_int($signal)) {
 			$this->Log("Registering signal {$signal} with dispatcher",true);
-			pcntl_signal($signal, array($this, 'SignalDispatch'));
+			pcntl_signal($signal, array(&$this, 'SignalDispatch'));
 		}
 	}
 	
@@ -368,11 +371,15 @@ class PowerProcess {
 	 */
 	public function Shutdown($exit = false) {
 		$this->Log("Initiating shutdown",true);
+		
 		while ($this->ThreadCount()) {
 			$this->CheckThreads();
 			$this->Tick();
 		}
+	
 		$this->complete = true;
+		
+		$this->Log("Shutdown Complete");
 		if ($exit) exit;
 	}
 	
@@ -444,7 +451,7 @@ class PowerProcess {
 		pcntl_signal_dispatch();
 		
 		// Check Running Threads
-		$this->CheckThreads();
+		if ($this->parentPID == $this->GetPID()) $this->CheckThreads();
 		
 		// Tick
 		usleep($this->tickCount);
@@ -497,6 +504,9 @@ class PowerProcess {
 		
 		// First need to fork
 		$pid = pcntl_fork();
+		
+		// Tick to catch signals
+		$this->Tick();
 		
 		if ($pid < 0) exit; // Error
 		if ($pid) exit;		// Parent
@@ -585,10 +595,13 @@ class PowerProcess {
 	 */
 	private function SignalDispatch($signal) {
 		// Log Dispatch
-		$this->Log("Dispatching signal: {$signal}",true);
+		$this->Log("Received signal: {$signal}",true);
 		
 		// Clear the block
-		if (is_int($signal)) pcntl_sigprocmask(SIG_UNBLOCK,array($signal));
+		if (is_int($signal)) pcntl_sigprocmask(SIG_BLOCK,array($signal));
+		
+		// Re-Register This Signal
+		$this->RegisterCallback($signal);
 		
 		// Check the callback array for this signal number
 		if (isset($this->callbacks[$signal])) {
@@ -599,10 +612,8 @@ class PowerProcess {
 			$this->Log("There is no callback registered for signal {$signal}",true);
 		}
 		
-		// Handle SIGTERM
-		if ($signal == 15) {
-			exit(0);
-		}
+		// Handle SIGTERM for threads
+		if ($signal == 15) exit(0);
 	}
 	
 }
