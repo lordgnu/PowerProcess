@@ -184,13 +184,10 @@ class PowerProcess {
 			// The the complete flag to false
 			$this->complete = false;
 			
-			// Install the signal handler
-			foreach ($this->signalArray as $signal) $this->RegisterCallback($signal);
-			$this->Log("Signal Dispatcher installed",true);
+			$this->InstallSignalHandler();
 			
-			// Register the callback for thread completion
-			$this->RegisterCallback(SIGCHLD, array($this,'CheckThreads'));
-			$this->Log("SIGCHLD callback registered",true);
+			// Init the Thread Queue
+			$this->myThreads = array();
 			
 			// Log completion of startup
 			$this->Log("Startup process complete",true);
@@ -213,13 +210,12 @@ class PowerProcess {
 	 * Executes specified program in the current process space
 	 * @param string $process	Path to the binary process to execute
 	 * @param array $args		Array of argument strings to pass to the program
-	 * @return void	
 	 */
 	public function Exec($process, $args = null) {
 		if ($args == null) {
-			pcntl_exec($proc);
+			pcntl_exec($process);
 		} else {
-			pcntl_exec($proc, $args);
+			pcntl_exec($process, $args);
 		}
 	}
 	
@@ -318,7 +314,7 @@ class PowerProcess {
 		if ($callback !== false) $this->callbacks[$signal] = $callback;
 		
 		// Register with PCNTL
-		if (!is_string($signal)) {
+		if (is_int($signal)) {
 			$this->Log("Registering signal {$signal} with dispatcher",true);
 			pcntl_signal($signal, array($this, 'SignalDispatch'));
 		}
@@ -329,6 +325,7 @@ class PowerProcess {
 	 * @return boolean
 	 */
 	public function RunControlCode() {
+		$this->Tick();
 		if (!$this->complete) {
 			return $this->ControlCheck();
 		} else {
@@ -364,15 +361,16 @@ class PowerProcess {
 	
 	/**
 	 * Initiates the shutdown procedure for PowerProcess
-	 * @return void
+	 * @param boolean $exit When set to true, Shutdown causes the script to exit
 	 */
-	public function Shutdown() {
+	public function Shutdown($exit = false) {
 		$this->Log("Initiating shutdown",true);
 		while ($this->ThreadCount()) {
 			$this->CheckThreads();
 			$this->Tick();
 		}
 		$this->complete = true;
+		if ($exit) exit;
 	}
 	
 	/**
@@ -380,6 +378,7 @@ class PowerProcess {
 	 * @return boolean
 	 */
 	public function SpawnReady() {
+		$this->Tick();
 		return ($this->ThreadCount() < $this->maxThreads);
 	}
 	
@@ -417,6 +416,7 @@ class PowerProcess {
 				'name'	=>	$name
 			);
 			$this->Log("Spawned thread: {$name}",true);
+			$this->Tick();
 			return true;
 		} else {
 			// We are the child thread so change the current thread var
@@ -526,6 +526,27 @@ class PowerProcess {
 	}
 	
 	/**
+	 * Installs the default signal handlers
+	 */
+	private function InstallSignalHandler() {
+		// Register the callback for thread completion
+		$this->RegisterCallback(SIGCHLD, array($this,'CheckThreads'));
+		$this->Log("SIGCHLD callback registered",true);
+		
+		// Register the callback for restart requests
+		$this->RegisterCallback(SIGHUP, array($this, 'Restart'));
+		$this->Log("SIGHUP callback registered");
+		
+		// Register the callback for shutdown requests
+		$this->RegisterCallback(SIGTERM, array($this, 'Shutdown'));
+		$this->Log("SIGTERM callback registered");
+		
+		// Install the signal handler
+		foreach ($this->signalArray as $signal) $this->RegisterCallback($signal);
+		$this->Log("Signal Dispatcher installed",true);
+	}
+	
+	/**
 	 * Kill a thread by PID
 	 * @param integer $pid The PID of the thread to kill
 	 * @return void
@@ -569,6 +590,9 @@ class PowerProcess {
 		// Log Dispatch
 		$this->Log("Dispatching signal: {$signal}",true);
 		
+		// Clear the block
+		if (is_int($signal)) pcntl_sigprocmask(SIG_UNBLOCK,array($signal));
+		
 		// Check the callback array for this signal number
 		if (isset($this->callbacks[$signal])) {
 			// Execute the callback
@@ -576,6 +600,11 @@ class PowerProcess {
 		} else {
 			// No callback registered
 			$this->Log("There is no callback registered for signal {$signal}",true);
+		}
+		
+		// Handle SIGTERM
+		if ($signal == 15) {
+			exit(0);
 		}
 	}
 	
