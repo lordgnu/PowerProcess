@@ -76,7 +76,7 @@ class PowerProcess {
 	
 	/**
 	 * The maximum number of concurrent threads that can be running at any given
-	 * time.  This setting has an impact on performance for PowerSpawn so play
+	 * time.  This setting has an impact on performance for PowerProcess so play
 	 * with it on the system you are on to determine a good value.
 	 * 10 is a good place to start
 	 * @var integer
@@ -192,7 +192,7 @@ class PowerProcess {
 			// Log completion of startup
 			$this->Log("Startup process complete",true);
 		} else {
-			die("PowerSpawn requires both the POSIX and PCNTL extensions to operate.\n");
+			die("PowerProcess requires both the POSIX and PCNTL extensions to operate.\n");
 		}
 	}
 	
@@ -261,7 +261,6 @@ class PowerProcess {
 	 * Log a message
 	 * @param string $msg The message to log
 	 * @param boolean $internal Whether this is an internal debug logging message
-	 * @return void
 	 */
 	public function Log($msg, $internal = false) {
 		if ($this->logSocket !== false) {
@@ -308,7 +307,6 @@ class PowerProcess {
 	 *   - 'threadotl' : Triggered on killing a thread due to exceeding time limit
 	 * @param int|string $signal The signal to register a callback for
 	 * @param callback $callback The callback function
-	 * @return void
 	 */
 	public function RegisterCallback($signal, $callback = false) {
 		if ($callback !== false) $this->callbacks[$signal] = $callback;
@@ -345,7 +343,6 @@ class PowerProcess {
 	/**
 	 * Set the max number of threads that can be running concurrently
 	 * @param integer $maxThreads The max number of threads to run concurrently
-	 * @return void
 	 */
 	public function SetMaxThreads($maxThreads = 10) {
 		$this->maxThreads = $maxThreads;
@@ -435,7 +432,6 @@ class PowerProcess {
 	
 	/**
 	 * Process signals to be dispatched and sleep for a number of microseconds
-	 * @return void
 	 */
 	public function Tick() {
 		// Dispatch Pending Signals
@@ -460,7 +456,6 @@ class PowerProcess {
 	/**
 	 * Checks all running threads to make sure they are still running and their time limit 
 	 * has not been exceeded
-	 * @return void
 	 */
 	private function CheckThreads() {
 		foreach ($this->myThreads as $i => $thread) {
@@ -513,7 +508,6 @@ class PowerProcess {
 	/**
 	 * Initialize the logging stream if enabled
 	 * @param string|boolean $logTo The path or stream to log to or false to disable
-	 * @return void
 	 */
 	private function InitializeLogger($logTo, $debugLogging) {
 		if ($logTo !== false) {
@@ -549,7 +543,6 @@ class PowerProcess {
 	/**
 	 * Kill a thread by PID
 	 * @param integer $pid The PID of the thread to kill
-	 * @return void
 	 */
 	private function KillThread($pid = 0) {
 		if ($pid > 0) {
@@ -573,7 +566,6 @@ class PowerProcess {
 	
 	/**
 	 * Closes the logging stream
-	 * @return void
 	 */
 	private function RemoveLogger() {
 		if ($this->logSocket) {
@@ -584,7 +576,6 @@ class PowerProcess {
 	/**
 	 * Handles dispatching of signals to user-defined callbacks
 	 * @param integer|string $signal
-	 * @return void
 	 */
 	private function SignalDispatch($signal) {
 		// Log Dispatch
