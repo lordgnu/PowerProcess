@@ -184,6 +184,7 @@ class PowerProcess {
 			// The the complete flag to false
 			$this->complete = false;
 			
+			// Install the signal handler
 			$this->InstallSignalHandler();
 			
 			// Init the Thread Queue
