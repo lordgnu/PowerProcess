@@ -8,7 +8,12 @@
  * processes for completing complicated tasks that would otherwise be 
  * inefficient for normal serial and procedural processing
  * 
+ * If you like PowerProcess, please consider donating
+ *  - BTC: 1K2tvdYzdDDd8w6vNHQgvbNQnhcHqLEadx
+ *  - LTC: LfceD3QH2n1FqH8inqHdKxjBFV55QvuESv
+ * 
  * @author Don Bauer <lordgnu@me.com>
+ * @link https://github.com/lordgnu/PowerProcess
  * @license MIT License
  * 
  * Copyright (c) 2011 Don Bauer <lordgnu@me.com>
