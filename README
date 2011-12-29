@@ -3,6 +3,27 @@ ABOUT
 	
 	It is for managing and running forked process for parrallel computing with PHP
 
+FEATURES
+	* Easy Process Threading for Parallel Computing
+	* Named Thread Support
+	* Linux/Unix Signal Handling
+	* Daemonizing PHP Scripts
+	* Automatic Ticks (No longer have to add calls to Tick() in loops)
+
+VERSION HISTORY
+	2.0 - 2011-12-29
+		Added Restart()
+		Added Daemonize()
+		Changed a number of method names
+		Added Log()
+		Added config options to constructor
+		Added Linux/Unix signal handlers for SIGHUP and SIGTERM 
+	1.1 - 2011-11-12
+		Added named thread support
+		Added ThreadStatus check support
+	1.0 - 2011-11-01
+		Forked from PowerSpawn 1.0
+
 HOW TO USE
 	Please check the examples included for information on how to use PowerProcess
 
