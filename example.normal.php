@@ -22,8 +22,6 @@ while ($pp->RunControlCode()) {
 				// Add the data back to the queue
 				$data[] = $pp->threadData;
 			}
-		} else {
-			$pp->Tick();
 		}
 	} else {
 		// No more data to process
