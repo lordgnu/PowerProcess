@@ -3,9 +3,11 @@
 // Include PowerProcess
 require_once 'PowerProcess.class.php';
 
-// Instance new PowerProcess class with 2 threads, 30 second timeout, 
+// Instance new PowerProcess class with 2 threads, 10 second timeout, 
 // standalone, log to STDOUT and include debug logging
-$pp = new PowerProcess(2,30,false,'php://stdout',true);
+// Since we have a 10 second timeout, the last five threads will be
+// terminated by PowerProcess
+$pp = new PowerProcess(2,10,false,'php://stdout',true);
 
 // Make some fake data
 $data = array(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15);
@@ -32,19 +34,18 @@ while ($pp->RunControlCode()) {
 		}
 	} else {
 		// No more data to process - shutdown
-		$pp->Shutdown();
+		$pp->Shutdown(true);
 	}
 }
 
 // Start the thread code
-if ($pp->RunThreadCode()) {
-	$pp->Log("Processing: {$pp->threadData}");
-	for ($i = 0; $i < $pp->threadData; $i++) {
-		sleep(1);
-		$pp->Log("Processed to {$i}");
-	}
-	// Exit thread
-	exit(0);
+
+$pp->Log("Processing: {$pp->threadData}");
+for ($i = 0; $i < $pp->threadData; $i++) {
+	sleep(1);
+	$pp->Log("Processed to {$i}");
 }
+// Exit thread
+exit(0);
 
 ?>
