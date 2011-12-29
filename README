@@ -9,6 +9,8 @@ FEATURES
 	* Linux/Unix Signal Handling
 	* Daemonizing PHP Scripts
 	* Automatic Ticks (No longer have to add calls to Tick() in loops)
+	* Dynamic callback support for *nix signals and custom events
+	* Process Space Takeover Ability
 
 VERSION HISTORY
 	2.0 - 2011-12-29
