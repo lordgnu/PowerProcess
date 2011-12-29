@@ -276,6 +276,36 @@ class PowerProcess {
 	}
 	
 	/**
+	 * Restarts the control process
+	 */
+	public function Restart() {
+		// Build Path of Script
+		if (isset($_SERVER['_'])) {
+			$cmd = $_SERVER['_'];
+			$this->Log("Attempting to restart using {$cmd}",true);
+		} else {
+			$this->Log("Can not restart - Shutting down", true);
+			return $this->Shutdown();
+		}
+		
+		// Wait for threads to complete
+		while ($this->ThreadCount()) {
+			$this->CheckThreads();
+			$this->Tick();
+		}
+		
+		// Remove the first arg if this is a stand-alone
+		if ($cmd == $_SERVER['argv'][0]) unset($_SERVER['argv'][0]);
+		
+		// Remove blocked signal
+		pcntl_sigprocmask(SIG_UNBLOCK, array(SIGHUP));
+		
+		// Execute Restart
+		$this->Exec($cmd, $_SERVER['argv']);
+		$this->Shutdown(true);
+	}
+	
+	/**
 	 * Registers a callback function for the signal dispatcher or for special signals used by PowerProcess
 	 * Special signals are:
 	 *   - 'shutdown' : Triggered on completion of the Shutdown() method
