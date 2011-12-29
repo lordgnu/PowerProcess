@@ -535,11 +535,11 @@ class PowerProcess {
 		
 		// Register the callback for restart requests
 		$this->RegisterCallback(SIGHUP, array($this, 'Restart'));
-		$this->Log("SIGHUP callback registered");
+		$this->Log("SIGHUP callback registered",true);
 		
 		// Register the callback for shutdown requests
 		$this->RegisterCallback(SIGTERM, array($this, 'Shutdown'));
-		$this->Log("SIGTERM callback registered");
+		$this->Log("SIGTERM callback registered",true);
 		
 		// Install the signal handler
 		foreach ($this->signalArray as $signal) $this->RegisterCallback($signal);
