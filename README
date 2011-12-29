@@ -26,10 +26,57 @@ VERSION HISTORY
 	1.0 - 2011-11-01
 		Forked from PowerSpawn 1.0
 
-HOW TO USE
-	Please check the examples included for information on how to use PowerProcess
-
 IMPORTANT NOTE
 	PowerProcess is very similar to PowerSpawn, however, more features are available in 
 	PowerProcess and it is not backwards compatible.  Changes to convert code to PowerProcess
 	are minimal and should be easy enough for you if you have experience with PowerSpawn
+
+ANOTHER IMPORTANT NOTE
+	Open database connections made in the control process do not carry over to the threads.
+	This means if you are doing work with a MySQL (or other) database, you will need to open a 
+	new database connection in the thread code.
+
+HOW TO USE
+	To use PowerProcess, once included you just need to simply instance the class like so:
+	
+	$pp = new PowerProcess();
+	
+	This will enable threading and daemon capabilities for your code.  Now that you have instanced
+	the class, you will need to set up your control loop like so:
+	
+	while ( $pp->RunControlCode() ) {
+		if ( __SOME_CONDITION_THAT_DETERMINES_IF_YOU_HAVE_DATA_TO_PROCESS__ ) {
+			$pp->threadData = __YOUR_DATA__;
+			$pp->SpawnThread();
+		} else {
+			$pp->Shutdown();
+		}
+	}
+	
+	That is what a basic control loop will look like.  When a new thread is spawned, it will resume
+	execution from the SpawnThread() method call.  It will break out of the while loop and execute
+	any code below the end of the while loop as a separate process than the one you started.
+	
+	When the Shutdown() method is called, the Control Loop will wait for all running threads to exit and
+	it too will break out of the while loop and resume executing the rest of the script.
+	
+	If you don't want to control process to execute the code below the loop, you have two options to prevent
+	it from doing do.
+	
+	First, you should call shutdown with an extra parameter: $pp->Shutdown(true)
+	This will make shutdown call exit() after all threads have completed.
+	
+	Second, you can wrap all the code you don't want the exiting control process to execute inside of
+	and if{} statement like so:
+	
+	if ($pp->RunThreadCode()) {
+		// My Code Here
+	}
+	
+MAKING A DAEMON
+	You don't have to use PowerProcess for threading.  You can also use it to create a PHP deamon.  You simply
+	instance the PowerProcess object by setting the daemon parameter to true.
+	
+	$pp = new PowerProcess(1,0,true); // 1 Thread, No Timeout, Daemon set to true
+	
+Please check the examples included for more information on how to use PowerProcess
