@@ -18,7 +18,7 @@ echo "Daemon started with 2 threads...\n";
 echo "You can run `tail -f daemonlog.txt` to follow my progress...\n";
 
 // Generate some fake data
-$data = array(1,2,3,4,5,6,7,8,9,10);
+$data = array(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15);
 
 // Start the control loop
 while ($pp->RunControlCode()) {
