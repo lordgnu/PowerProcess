@@ -301,9 +301,6 @@ class PowerProcess {
 		// Remove the first arg if this is a stand-alone
 		if ($cmd == $_SERVER['argv'][0]) unset($_SERVER['argv'][0]);
 		
-		// Remove blocked signal
-		pcntl_sigprocmask(SIG_UNBLOCK, array(SIGHUP));
-		
 		// Execute Restart
 		$this->Exec($cmd, $_SERVER['argv']);
 		$this->Shutdown(true);
@@ -324,6 +321,9 @@ class PowerProcess {
 		if (is_int($signal)) {
 			$this->Log("Registering signal {$signal} with dispatcher",true);
 			pcntl_signal($signal, array(&$this, 'SignalDispatch'));
+			
+			// Unblock the Signal
+			pcntl_sigprocmask(SIG_UNBLOCK,array($signal));
 		}
 	}
 	
@@ -596,12 +596,6 @@ class PowerProcess {
 	private function SignalDispatch($signal) {
 		// Log Dispatch
 		$this->Log("Received signal: {$signal}",true);
-		
-		// Clear the block
-		if (is_int($signal)) pcntl_sigprocmask(SIG_BLOCK,array($signal));
-		
-		// Re-Register This Signal
-		$this->RegisterCallback($signal);
 		
 		// Check the callback array for this signal number
 		if (isset($this->callbacks[$signal])) {
