@@ -116,6 +116,12 @@ class PowerProcess {
 	private $tickCount = 100;
 	
 	/**
+	 * Whether to add a timestamp to log output
+	 * @var boolean
+	 */
+	private $timeStampLogs = true;
+	
+	/**
 	 * The maximum number of seconds a thread will be allowed to run.
 	 * Set to 0 to disable a time limit (use with caution)
 	 * @var integer
@@ -274,7 +280,11 @@ class PowerProcess {
 	public function Log($msg, $internal = false) {
 		if ($this->logSocket !== false) {
 			if (!$internal || $this->debugLogging) {
-				fwrite($this->logSocket, sprintf("[%-12s] %s\n", $this->WhoAmI(), $msg));
+				if ($this->timeStampLogs) {
+					fwrite($this->logSocket, sprintf("[%s][%-12s] %s\n", date("Y-m-d H:i:s"), $this->WhoAmI(), $msg));
+				} else {
+					fwrite($this->logSocket, sprintf("[%-12s] %s\n", $this->WhoAmI(), $msg));
+				}
 			}
 		}
 	}
