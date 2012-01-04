@@ -360,6 +360,19 @@ class PowerProcess {
 	}
 	
 	/**
+	 * Send a signal to a process
+	 * @param integer $pid
+	 * @param integer $signal
+	 */
+	public function SendSignal($pid = 0, $signal = 0) {
+		if ($signal > 0 && $pid > 0) {
+			return posix_kill($pid, $signal) && pcntl_signal_dispatch();
+		} else {
+			return false;
+		}
+	}
+	
+	/**
 	 * Set the max number of threads that can be running concurrently
 	 * @param integer $maxThreads The max number of threads to run concurrently
 	 */
@@ -571,9 +584,7 @@ class PowerProcess {
 	 * @param integer $pid The PID of the thread to kill
 	 */
 	private function KillThread($pid = 0) {
-		if ($pid > 0) {
-			posix_kill($pid, SIGTERM);
-		}
+		$this->SendSignal($pid, SIGTERM);
 	}
 	
 	/**
