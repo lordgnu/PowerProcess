@@ -1,7 +1,7 @@
 <?php
 
 // Include PowerProcess
-require_once 'PowerProcess.class.php';
+require_once '../PowerProcess.class.php';
 
 // Instance new PowerProcess class
 $pp = new PowerProcess(2,30,false,'php://stdout',true);

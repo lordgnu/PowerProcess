@@ -1,7 +1,7 @@
 <?php
 
 // Include PowerProcess
-require_once 'PowerProcess.class.php';
+require_once '../PowerProcess.class.php';
 
 // Instance new PowerProcess class with 2 threads, 30 second timeout, 
 // as daemon with logging to daemonlog.txt
