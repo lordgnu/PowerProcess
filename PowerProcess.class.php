@@ -52,7 +52,7 @@ class PowerProcess {
 	 * 
 	 * @var string
 	 */
-	public static $version = '2.0';
+	public static $version = '2.1';
 	
 	/**
 	 * Data store for data that is to be passed to the child process which is to be spawned
