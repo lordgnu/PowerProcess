@@ -41,6 +41,12 @@ declare(ticks = 1);
  * SOFTWARE.
  */
 class PowerProcess {
+	const CALLBACK_STOP_PROPOGATION	=	-1;
+	const CALLBACK_IGNORE			=	0;
+	const CALLBACK_CONTINUE 		=	1;
+	const CALLBACK_SHUTDOWN 		=	2;
+	const CALLBACK_RESTART			=	3;
+	
 	/**
 	 * Current PowerProcess version
 	 * 
@@ -171,6 +177,85 @@ class PowerProcess {
 		SIGUSR2		// User-Defined 2
 	);
 	
+	static public function SignalName($signal) {
+		switch ($signal) {
+			case SIGHUP: 
+				return 'SIGHUP';
+			case SIGINT: 
+				return 'SIGINT';
+			case SIGQUIT: 
+				return 'SIGQUIT';
+			case SIGILL: 
+				return 'SIGILL';
+			case SIGTRAP: 
+				return 'SIGTRAP';
+			case SIGABRT: 
+				return 'SIGABRT';
+			case SIGIOT: 
+				return 'SIGIOT';
+			case SIGBUS: 
+				return 'SIGBUS';
+			case SIGFPE: 
+				return 'SIGFPE';
+			case SIGUSR1: 
+				return 'SIGUSR1';
+			case SIGSEGV: 
+				return 'SIGSEGV';
+			case SIGUSR2: 
+				return 'SIGUSR2';
+			case SIGPIPE: 
+				return 'SIGPIPE';
+			case SIGALRM: 
+				return 'SIGALRM';
+			case SIGTERM: 
+				return 'SIGTERM';
+			case SIGSTKFLT: 
+				return 'SIGSTKFLT';
+			case SIGCLD: 
+				return 'SIGCLD';
+			case SIGCHLD: 
+				return 'SIGCHLD';
+			case SIGCONT: 
+				return 'SIGCONT';
+			case SIGTSTP: 
+				return 'SIGTSTP';
+			case SIGTTIN: 
+				return 'SIGTTIN';
+			case SIGTTOU: 
+				return 'SIGTTOU';
+			case SIGURG: 
+				return 'SIGURG';
+			case SIGXCPU: 
+				return 'SIGXCPU';
+			case SIGXFSZ: 
+				return 'SIGXFSZ';
+			case SIGVTALRM: 
+				return 'SIGVTALRM';
+			case SIGPROF: 
+				return 'SIGPROF';
+			case SIGWINCH: 
+				return 'SIGWINCH';
+			case SIGPOLL: 
+				return 'SIGPOLL';
+			case SIGIO: 
+				return 'SIGIO';
+			case SIGPWR: 
+				return 'SIGPWR';
+			case SIGSYS: 
+				return 'SIGSYS';
+			case SIGBABY: 
+				return 'SIGBABY';
+			case SIG_BLOCK: 
+				return 'SIG_BLOCK';
+			case SIG_UNBLOCK: 
+				return 'SIG_UNBLOCK';
+			case SIG_SETMASK: 
+				return 'SIG_SETMASK';
+			default:
+				return "Signal # {$signal}";
+		}
+	}
+	
 	/**
 	 * PowerProcess constructor.  
 	 * 
@@ -184,7 +269,7 @@ class PowerProcess {
 	 * 
 	 * @return object	Instanced PowerProcess object
 	 */
-	public function PowerProcess($maxThreads = 10, $threadTimeLimit = 300, $daemon = false, $logTo = false, $debugLogging = false) {
+	public function __construct($maxThreads = 10, $threadTimeLimit = 300, $daemon = false, $logTo = false, $debugLogging = false) {
 		if (function_exists('pcntl_fork') && function_exists('posix_getpid')) {
 			// Set the current thread name
 			$this->currentThread = 'CONTROL';
@@ -307,9 +392,9 @@ class PowerProcess {
 		if ($this->logSocket !== false) {
 			if (!$internal || $this->debugLogging) {
 				if ($this->timeStampLogs) {
-					fwrite($this->logSocket, sprintf("[%s][%-12s] %s\n", date("Y-m-d H:i:s"), $this->WhoAmI(), $msg));
+					fwrite($this->logSocket, sprintf("[%s][%-22s] %s\n", date("Y-m-d H:i:s"), $this->WhoAmI(), $msg));
 				} else {
-					fwrite($this->logSocket, sprintf("[%-12s] %s\n", $this->WhoAmI(), $msg));
+					fwrite($this->logSocket, sprintf("[%-22s] %s\n", $this->WhoAmI(), $msg));
 				}
 			}
 		}
@@ -340,6 +425,7 @@ class PowerProcess {
 		// Execute Restart
 		$this->Exec($cmd, $_SERVER['argv']);
 		$this->Shutdown(true);
+		return self::CALLBACK_IGNORE;
 	}
 	
 	/**
@@ -353,7 +439,7 @@ class PowerProcess {
 	 * @param callback $callback The callback function
 	 */
 	public function RegisterCallback($signal, $callback = false) {
-		if ($callback !== false) $this->callbacks[$signal] = $callback;
+		if ($callback !== false) $this->callbacks[$signal][] = $callback;
 		
 		// Register with PCNTL
 		if (is_int($signal)) {
@@ -433,11 +519,16 @@ class PowerProcess {
 			$this->CheckThreads();
 			$this->Tick();
 		}
-	
+		
 		$this->complete = true;
+		
+		// Send custom shutdown signal
+		$this->SignalDispatch('shutdown');
 		
 		$this->Log("Shutdown Complete");
 		if ($exit) exit;
+		
+		return self::CALLBACK_IGNORE;
 	}
 	
 	/**
@@ -453,11 +544,12 @@ class PowerProcess {
 	/**
 	 * Spawn a new thread
 	 * 
-	 * @param $name The name of the thread to be spawned
+	 * @param string $name The name of the thread to be spawned
+	 * @param boolean $returnPid Whether to return the pid instead of boolean
 	 * 
-	 * @return boolean
+	 * @return boolean|integer
 	 */
-	public function SpawnThread($name = false) {
+	public function SpawnThread($name = false, $returnPid = false) {
 		// Check to make sure we can spawn another thread
 		if (!$this->SpawnReady()) {
 			$this->Log("The maximum number of threads are already running",true);
@@ -487,11 +579,11 @@ class PowerProcess {
 			);
 			$this->Log("Spawned thread: {$name}",true);
 			$this->Tick();
-			return true;
+			return ($returnPid) ? $pid : true;
 		} else {
 			// We are the child thread so change the current thread var
 			$this->currentThread = ($name === false) ? "THREAD:".$this->GetPID() : $name;
-			return true;
+			return ($returnPid) ? $pid : true;
 		}
 	}
 	
@@ -662,17 +754,51 @@ class PowerProcess {
 	 * 
 	 * @param integer|string $signal
 	 */
-	private function SignalDispatch($signal) {
+	public function SignalDispatch($signal) {
 		// Log Dispatch
-		$this->Log("Received signal: {$signal}",true);
+		$signalName = self::SignalName($signal);
+		$this->Log("Received signal: {$signalName}",true);
 		
 		// Check the callback array for this signal number
 		if (isset($this->callbacks[$signal])) {
 			// Execute the callback
-			call_user_func($this->callbacks[$signal]);
+			$callStack = $this->callbacks[$signal];
+			
+			// Run last added callbacks first (FILO)
+			$i = count($callStack);
+			while ($callback = array_pop($callStack)) {
+				$this->Log("Running Callback[{$i}] for signal: {$signalName}", true);
+				--$i;
+				$status = call_user_func($callback);
+				
+				// Check if we should continue
+				if ($status == self::CALLBACK_STOP_PROPOGATION) {
+					// Break out of loop
+					$this->Log("Callback[{$i}] for signal '{$signalName}' has stopped propogation of further callbacks", true);
+					break;
+				}
+				
+				// OK, now switch on the status
+				switch ($status) {
+					case self::CALLBACK_RESTART:
+						$this->Restart();
+						break;
+					case self::CALLBACK_SHUTDOWN:
+						$this->Shutdown();
+						break;
+					case self::CALLBACK_IGNORE:
+					case self::CALLBACK_CONTINUE:
+						// Do nothing :: Continue propogation
+						break;
+					default:
+						$this->Log("Callback[{$i}] for signal '{$signalName}' did not return a valid status");
+				}
+				
+				// Continue the loop
+			}
 		} else {
 			// No callback registered
-			$this->Log("There is no callback registered for signal {$signal}",true);
+			$this->Log("There is no callback registered for signal {$signalName}",true);
 		}
 		
 		// Handle SIGTERM for threads
