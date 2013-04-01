@@ -1,0 +1,18 @@
+{
+    "name": "bauerbox/powerprocess",
+    "description": "Process forking and threading made easy",
+    "license": "MIT",
+    "autoload": {
+        "psr-0": { "BauerBox\\PowerProcess\\": "lib/PowerProcess" }
+    },
+    "authors": [
+        {
+            "name": "Don Bauer",
+            "email": "lordgnu@me.com",
+            "homepage": "http://www.bauerbox.com"
+        }
+    ],
+    "require": {
+        "psr/log": "dev-master"
+    }
+}
